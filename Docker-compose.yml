@@ -1,0 +1,36 @@
+version: "3.8" # 사용하는 Docker Compose 파일 버전
+
+services:
+  logger:
+    image: ecr-next:latest # 사용할 이미지
+    container_name: ecr-next # 컨테이너 이름
+    ports:
+      - "3000:3000" # 호스트:컨테이너 포트 매핑 (호스트만 변경하면 됨)
+    networks:
+      - mysql # 네트워크 설정
+    env_file:
+      - .env # 환경변수 파일
+    restart: unless-stopped # 컨테이너 종료 시 재시작 정책
+
+  # 프로덕션에서는 앱과 DB를 한번에 배포 가능
+  # mysql:
+  #   image: mysql # MySQL 이미지 없으면 docker pull mysql 로 도커 허브에서 다운로드
+  #   container_name: mysql # 컨테이너 이름
+  #   ports:
+  #     - "3306:3306" # 호스트:컨테이너 포트 매핑
+  #   volumes: # 파일 디렉토리 미리 생성해야함
+  #     - /home/dataslab/mysql/data:/var/lib/mysql # 데이터 볼륨 마운트
+  #     - /home/dataslab/mysql/log:/var/log/mysql # 로그 볼륨 마운트
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=data0601 # MySQL 루트 비밀번호 설정
+  #   networks:
+  #     - mysql # 네트워크 설정
+  #   restart: unless-stopped # 컨테이너 종료 시 재시작 정책
+
+  # 프로젝트 생성후 데이터 베이스 생성
+  # docker exec -it mysql mysql -u root -p
+  # CREATE DATABASE appdb;
+
+networks:
+  mysql:
+    external: true
