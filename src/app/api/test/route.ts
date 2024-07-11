@@ -76,16 +76,16 @@ export async function GET(req: Request) {
 
   const result = await client.test.findMany();
 
-  return NextResponse.json({ ok: true, url, result });
+  return NextResponse.json({ ok: true, result });
 }
 
 export async function POST(req: NextRequest) {
-  const requestData = await req.json();
+  // const requestData = await req.json();
 
-  if (!requestData)
-    return NextResponse.json({ ok: false, msg: "missing param(s)" });
+  // if (!requestData)
+  // return NextResponse.json({ ok: false, msg: "missing param(s)" });
 
-  const { url, ip, path, user, content } = requestData;
+  // const { url, ip, path, user, content } = requestData;
   // const asp = await client.asp.create({
   //   data: {
   //     url: url.slice(0, 20),
