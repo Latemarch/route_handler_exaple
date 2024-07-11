@@ -23,6 +23,7 @@ services:
   #     - /home/dataslab/mysql/log:/var/log/mysql # 로그 볼륨 마운트
   #   environment:
   #     - MYSQL_ROOT_PASSWORD=data0601 # MySQL 루트 비밀번호 설정
+  #     - MYSQL_DATABASE=appdb          # 자동으로 생성할 데이터베이스 이름
   #   networks:
   #     - mysql # 네트워크 설정
   #   restart: unless-stopped # 컨테이너 종료 시 재시작 정책
