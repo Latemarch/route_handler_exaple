@@ -1,9 +1,22 @@
+import { NextResponse } from "next/server";
+import client from "@/libs/server/client";
+
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+
+  const result = await client.user.findMany();
+
+  return NextResponse.json({ ok: true, url, result });
+}
+
 /**
  * @swagger
  * /api/users:
  *   get:
  *     summary: Retrieves a list of users
  *     description: Returns a list of all registered users.
+ *     tags:
+ *       - User
  *     responses:
  *       200:
  *         description: A list of users
@@ -60,13 +73,3 @@
  *                         type: boolean
  *                         example: true
  */
-import { NextResponse, NextRequest } from "next/server";
-import client from "@/libs/server/client";
-
-export async function GET(req: Request) {
-  const url = new URL(req.url);
-
-  const result = await client.user.findMany();
-
-  return NextResponse.json({ ok: true, url, result });
-}

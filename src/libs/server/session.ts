@@ -11,3 +11,11 @@ export const sessionOptions: SessionOptions = {
     secure: false,
   },
 };
+
+export type SessionData = {
+  username: string;
+  userId: number;
+  isMember: boolean;
+  isAdmin: boolean;
+  isSuperAdmin: boolean;
+};

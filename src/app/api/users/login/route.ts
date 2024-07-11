@@ -1,9 +1,59 @@
+import { NextRequest, NextResponse } from "next/server";
+import client from "@/libs/server/client";
+import { getIronSession } from "iron-session";
+import { cookies } from "next/headers";
+import { SessionData, sessionOptions } from "@/libs/server/session";
+
+export async function POST(req: NextRequest) {
+  const { email, password } = await req.json();
+  console.log(email, password);
+
+  if (!email || !password) {
+    return NextResponse.json(
+      { ok: false, error: "missing email or password" },
+      { status: 400 }
+    );
+  }
+
+  const user = await client.user.findUnique({
+    where: { email },
+  });
+
+  if (!user) {
+    return NextResponse.json(
+      { ok: false, error: "User not found" },
+      { status: 404 }
+    );
+  }
+  if (user.password !== password) {
+    return NextResponse.json(
+      { ok: false, error: "Invalid password" },
+      { status: 401 }
+    );
+  }
+
+  //sesion 처리
+  const session = await getIronSession<SessionData>(cookies(), sessionOptions);
+
+  session.username = user.username;
+  session.userId = user.id;
+  session.isMember = user.is_member;
+  session.isAdmin = user.is_admin;
+  session.isSuperAdmin = user.is_superamin;
+  await session.save();
+
+  const { name, username, id } = user;
+  return NextResponse.json({ ok: true, result: { id, name, username } });
+}
+
 /**
  * @swagger
  * /api/users/login:
  *   post:
  *     summary: Login a user
  *     description: Logs in a user by checking the provided email and password.
+ *     tags:
+ *       - User
  *     requestBody:
  *       required: true
  *       content:
@@ -31,45 +81,18 @@
  *                 ok:
  *                   type: boolean
  *                   example: true
- *                 user:
+ *                 result:
  *                   type: object
  *                   properties:
  *                     id:
  *                       type: integer
  *                       example: 1
- *                     username:
- *                       type: string
- *                       example: johndoe
- *                     email:
- *                       type: string
- *                       example: johndoe@example.com
  *                     name:
  *                       type: string
  *                       example: John Doe
- *                     is_member:
- *                       type: boolean
- *                       example: true
- *                     is_admin:
- *                       type: boolean
- *                       example: false
- *                     is_superamin:
- *                       type: boolean
- *                       example: false
- *                     createdAt:
+ *                     username:
  *                       type: string
- *                       format: date-time
- *                       example: 2023-07-01T00:00:00.000Z
- *                     updatedAt:
- *                       type: string
- *                       format: date-time
- *                       example: 2023-07-01T00:00:00.000Z
- *                     last_login:
- *                       type: string
- *                       format: date-time
- *                       example: 2023-07-01T12:00:00.000Z
- *                     is_active:
- *                       type: boolean
- *                       example: true
+ *                       example: johndoe
  *       400:
  *         description: Missing email or password
  *         content:
@@ -110,36 +133,3 @@
  *                   type: string
  *                   example: User not found
  */
-import { NextRequest, NextResponse } from "next/server";
-import client from "@/libs/server/client";
-
-export async function POST(req: NextRequest) {
-  const { email, password } = await req.json();
-  console.log(email, password);
-
-  if (!email || !password) {
-    return NextResponse.json(
-      { ok: false, error: "missing email or password" },
-      { status: 400 }
-    );
-  }
-
-  const user = await client.user.findUnique({
-    where: { email },
-  });
-
-  if (!user) {
-    return NextResponse.json(
-      { ok: false, error: "User not found" },
-      { status: 404 }
-    );
-  }
-  if (user.password !== password) {
-    return NextResponse.json(
-      { ok: false, error: "Invalid password" },
-      { status: 401 }
-    );
-  }
-
-  return NextResponse.json({ ok: true, user });
-}
