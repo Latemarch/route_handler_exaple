@@ -1,63 +1,60 @@
 import { NextRequest, NextResponse } from "next/server";
 import client from "@/libs/server/client";
+import { getIronSession } from "iron-session";
+import { SessionData, sessionOptions } from "@/libs/server/session";
+import { cookies } from "next/headers";
+import { generateUniqueGroupCode } from "./funtions";
 
 export async function POST(req: NextRequest) {
-  const { email, name, username, password }: { [key: string]: string } =
-    await req.json();
+  const { groupName }: { [key: string]: string } = await req.json();
+  const session = await getIronSession<SessionData>(cookies(), sessionOptions);
 
-  if (!email || !password || !username || !name) {
+  if (!session.isAdmin) {
     return NextResponse.json(
-      { ok: false, error: "missing email, username, name or password" },
+      { ok: false, error: "Permission denied" },
+      { status: 403 }
+    );
+  }
+
+  if (!groupName) {
+    return NextResponse.json(
+      { ok: false, error: "missing group name" },
       { status: 400 }
     );
   }
 
-  // 이메일 중복 검사
-  const emailExists = await client.user.findUnique({
-    where: { email },
+  // 그룹 이름 중복 검사
+  const groupExists = await client.group.findUnique({
+    where: { groupName },
   });
 
-  if (emailExists) {
+  if (groupExists) {
     return NextResponse.json(
-      { ok: false, error: "Email already in use" },
+      { ok: false, error: "Group name is already in use" },
       { status: 409 }
     );
   }
 
-  // 사용자명 중복 검사
-  const usernameExists = await client.user.findUnique({
-    where: { username },
-  });
+  const groupCode = await generateUniqueGroupCode();
 
-  if (usernameExists) {
-    return NextResponse.json(
-      { ok: false, error: "Username already in use" },
-      { status: 409 }
-    );
-  }
-
-  // 사용자 생성
-  const user = await client.user.create({
+  // 그룹 생성
+  const group = await client.group.create({
     data: {
-      email,
-      name,
-      username,
-      password,
-      is_member: false,
-      is_admin: false,
-      is_superamin: false,
-      is_active: true,
+      groupCode,
+      groupName,
+      companyId: session.companyId!,
     },
   });
 
-  return NextResponse.json({ ok: true, result: user });
+  return NextResponse.json({ ok: true, result: group });
 }
+
 /**
  * @swagger
  * /api/groups/create:
  *   post:
- *     summary: Register a new user
- *     description: Registers a new user by creating an account with the provided email, username, name, and password. Checks for existing email and username.
+ *     summary: Create a new group
+ *     description: Creates a new group with a unique group code and assigns it to the company of the admin user.
  *     tags:
  *       - Group
  *     requestBody:
@@ -66,27 +63,13 @@ export async function POST(req: NextRequest) {
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - email
- *               - password
- *               - username
- *               - name
  *             properties:
- *               email:
+ *               groupName:
  *                 type: string
- *                 example: test@test.com
- *               password:
- *                 type: string
- *                 example: testpassword
- *               username:
- *                 type: string
- *                 example: testuser
- *               name:
- *                 type: string
- *                 example: Test User
+ *                 example: "Example Group"
  *     responses:
  *       200:
- *         description: Successfully registered
+ *         description: Successfully created the group.
  *         content:
  *           application/json:
  *             schema:
@@ -94,24 +77,23 @@ export async function POST(req: NextRequest) {
  *               properties:
  *                 ok:
  *                   type: boolean
- *                   example: true
  *                 result:
  *                   type: object
  *                   properties:
  *                     id:
  *                       type: integer
  *                       example: 1
- *                     email:
+ *                     groupCode:
  *                       type: string
- *                       example: test@test.com
- *                     username:
+ *                       example: "ABCD"
+ *                     groupName:
  *                       type: string
- *                       example: testuser
- *                     name:
- *                       type: string
- *                       example: Test User
+ *                       example: "Example Group"
+ *                     companyId:
+ *                       type: integer
+ *                       example: 1
  *       400:
- *         description: Missing required fields
+ *         description: Missing group name.
  *         content:
  *           application/json:
  *             schema:
@@ -119,12 +101,23 @@ export async function POST(req: NextRequest) {
  *               properties:
  *                 ok:
  *                   type: boolean
- *                   example: false
  *                 error:
  *                   type: string
- *                   example: missing email, username, name or password
+ *                   example: "missing group name"
+ *       403:
+ *         description: Permission denied.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *                   example: "Permission denied"
  *       409:
- *         description: Conflict, email or username already in use
+ *         description: Group name is already in use.
  *         content:
  *           application/json:
  *             schema:
@@ -132,10 +125,7 @@ export async function POST(req: NextRequest) {
  *               properties:
  *                 ok:
  *                   type: boolean
- *                   example: false
  *                 error:
  *                   type: string
- *                   examples:
- *                     email: "Email already in use"
- *                     username: "Username already in use"
+ *                   example: "Group name is already in use"
  */

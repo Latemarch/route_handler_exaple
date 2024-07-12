@@ -6,7 +6,7 @@ export async function GET(req: Request) {
 
   const result = await client.user.findMany();
 
-  return NextResponse.json({ ok: true, url, result });
+  return NextResponse.json({ ok: true, result });
 }
 
 /**
@@ -28,9 +28,6 @@ export async function GET(req: Request) {
  *                 ok:
  *                   type: boolean
  *                   example: true
- *                 url:
- *                   type: string
- *                   example: "http://localhost:3000/api/users"
  *                 result:
  *                   type: array
  *                   items:

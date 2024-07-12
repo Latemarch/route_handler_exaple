@@ -15,6 +15,7 @@ export const sessionOptions: SessionOptions = {
 export type SessionData = {
   username: string;
   userId: number;
+  companyId: number;
   isMember: boolean;
   isAdmin: boolean;
   isSuperAdmin: boolean;

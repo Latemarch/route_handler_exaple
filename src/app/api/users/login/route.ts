@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
 
   session.username = user.username;
   session.userId = user.id;
+  session.companyId = user.companyId;
   session.isMember = user.isMember;
   session.isAdmin = user.isAdmin;
   session.isSuperAdmin = user.isSuperamin;
