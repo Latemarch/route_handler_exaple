@@ -4,15 +4,39 @@ import client from "@/libs/server/client";
 export async function POST(req: NextRequest) {
   const { email, name, username, password }: { [key: string]: string } =
     await req.json();
-  console.log(email, password);
 
-  if (!email || !password) {
+  if (!email || !password || !username || !name) {
     return NextResponse.json(
-      { ok: false, error: "missing email or password" },
+      { ok: false, error: "missing email, username, name or password" },
       { status: 400 }
     );
   }
 
+  // 이메일 중복 검사
+  const emailExists = await client.user.findUnique({
+    where: { email },
+  });
+
+  if (emailExists) {
+    return NextResponse.json(
+      { ok: false, error: "Email already in use" },
+      { status: 409 }
+    );
+  }
+
+  // 사용자명 중복 검사
+  const usernameExists = await client.user.findUnique({
+    where: { username },
+  });
+
+  if (usernameExists) {
+    return NextResponse.json(
+      { ok: false, error: "Username already in use" },
+      { status: 409 }
+    );
+  }
+
+  // 사용자 생성
   const user = await client.user.create({
     data: {
       email,
@@ -25,17 +49,15 @@ export async function POST(req: NextRequest) {
       is_active: true,
     },
   });
-  console.log(user);
 
   return NextResponse.json({ ok: true, result: user });
 }
-
 /**
  * @swagger
  * /api/users/register:
  *   post:
  *     summary: Register a new user
- *     description: Registers a new user by creating an account with the provided email, password, username, and name.
+ *     description: Registers a new user by creating an account with the provided email, username, name, and password. Checks for existing email and username.
  *     tags:
  *       - User
  *     requestBody:
@@ -73,7 +95,7 @@ export async function POST(req: NextRequest) {
  *                 ok:
  *                   type: boolean
  *                   example: true
- *                 user:
+ *                 result:
  *                   type: object
  *                   properties:
  *                     id:
@@ -100,9 +122,9 @@ export async function POST(req: NextRequest) {
  *                   example: false
  *                 error:
  *                   type: string
- *                   example: missing email, password, username or name
- *       500:
- *         description: Internal server error
+ *                   example: missing email, username, name or password
+ *       409:
+ *         description: Conflict, email or username already in use
  *         content:
  *           application/json:
  *             schema:
@@ -113,5 +135,7 @@ export async function POST(req: NextRequest) {
  *                   example: false
  *                 error:
  *                   type: string
- *                   example: Error message
+ *                   examples:
+ *                     email: "Email already in use"
+ *                     username: "Username already in use"
  */

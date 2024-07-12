@@ -77,7 +77,6 @@ model UserGroups {
   group      Group    @relation(fields: [groupId], references: [id])
   groupId    Int
   assignedAt DateTime @default(now())
-  assignedBy String
 
   @@id([userId, groupId])
 }
