@@ -37,9 +37,9 @@ export async function POST(req: NextRequest) {
 
   session.username = user.username;
   session.userId = user.id;
-  session.isMember = user.is_member;
-  session.isAdmin = user.is_admin;
-  session.isSuperAdmin = user.is_superamin;
+  session.isMember = user.isMember;
+  session.isAdmin = user.isAdmin;
+  session.isSuperAdmin = user.isSuperamin;
   await session.save();
 
   const { name, username, id } = user;

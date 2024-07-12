@@ -26,13 +26,16 @@ model User {
   password     String
   email        String             @unique
   name         String
-  is_member    Boolean            @default(false)
-  is_admin     Boolean            @default(false)
-  is_superamin Boolean            @default(false)
+  isMember     Boolean            @default(false)
+  isAdmin      Boolean            @default(false)
+  isSuperamin  Boolean            @default(false)
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
-  last_login   DateTime?
-  is_active    Boolean
+  lastLogin    DateTime?
+  isActive     Boolean            @default(true)
+  //
+  company      Company            @relation(fields: [companyId], references: [id])
+  companyId    Int                @default(0)
   groups       UserGroups[]
   notes        UserNotes[]
   reservations UserReservations[]
@@ -40,33 +43,61 @@ model User {
 
 model Group {
   id           Int           @id @default(autoincrement())
-  group_code   String        @unique
-  group_name   String
+  groupCode    String        @unique
+  groupName    String        @unique
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  //
+  company      Company       @relation(fields: [companyId], references: [id])
+  companyId    Int
+  notes        Note[]
+  users        UserGroups[]
+  reservations Reservation[]
+}
+
+model Company {
+  id           Int           @id @default(autoincrement())
+  companyName  String
+  //
+  groups       Group[]
+  users        User[]
   notes        Note[]
   reservations Reservation[]
-  users        UserGroups[]
 }
 
 model Note {
   id            Int         @id @default(autoincrement())
-  progress      Int
-  status        String
+  createdBy     Int
+  progress      Int         @default(0)
+  status        Status      @default(pending)
   contents      Json
+  userCount     Int
+  //
   group         Group       @relation(fields: [groupId], references: [id])
   groupId       Int
   reservation   Reservation @relation(fields: [reservationId], references: [id])
   reservationId Int
-  users         UserNotes[]
+  company       Company     @relation(fields: [companyId], references: [id])
+  companyId     Int
+  userNotes     UserNotes[]
+}
+
+enum Status {
+  error
+  complete
+  pending
 }
 
 model Reservation {
-  id         Int                @id @default(autoincrement())
-  start_time DateTime
-  end_time   DateTime
-  users      UserReservations[]
-  notes      Note[]
-  groupId    Int
-  group      Group              @relation(fields: [groupId], references: [id])
+  id        Int                @id @default(autoincrement())
+  startTime DateTime
+  endTime   DateTime
+  users     UserReservations[]
+  notes     Note[]
+  groupId   Int
+  group     Group              @relation(fields: [groupId], references: [id])
+  company   Company?           @relation(fields: [companyId], references: [id])
+  companyId Int?
 }
 
 // Many-to-Many relation models
@@ -77,6 +108,7 @@ model UserGroups {
   group      Group    @relation(fields: [groupId], references: [id])
   groupId    Int
   assignedAt DateTime @default(now())
+  assignedBy String
 
   @@id([userId, groupId])
 }

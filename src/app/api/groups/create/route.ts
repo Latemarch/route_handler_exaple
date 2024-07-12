@@ -43,10 +43,10 @@ export async function POST(req: NextRequest) {
       name,
       username,
       password,
-      isMember: false,
-      isAdmin: false,
-      isSuperamin: false,
-      isActive: true,
+      is_member: false,
+      is_admin: false,
+      is_superamin: false,
+      is_active: true,
     },
   });
 
@@ -54,12 +54,12 @@ export async function POST(req: NextRequest) {
 }
 /**
  * @swagger
- * /api/users/register:
+ * /api/groups/create:
  *   post:
  *     summary: Register a new user
  *     description: Registers a new user by creating an account with the provided email, username, name, and password. Checks for existing email and username.
  *     tags:
- *       - User
+ *       - Group
  *     requestBody:
  *       required: true
  *       content:
